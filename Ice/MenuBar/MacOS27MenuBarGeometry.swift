@@ -8,6 +8,15 @@ import CoreGraphics
 /// Geometry is expressed in global Quartz/Accessibility points, including
 /// negative origins and portrait displays. No physical pixel dimensions.
 enum MacOS27MenuBarGeometry {
+    /// AX can report the main display's application-menu frame for a secondary
+    /// display. Translate points only after validating the source and target.
+    /// The caller must exclude notched displays, where menu layouts can differ.
+    static func translatedApplicationMenu(_ frame: CGRect, from source: CGRect, to target: CGRect) -> CGRect? {
+        guard isOnMenuBar(frame, display: source) else { return nil }
+        let translated = frame.offsetBy(dx: target.minX - source.minX, dy: target.minY - source.minY)
+        return isOnMenuBar(translated, display: target) ? translated : nil
+    }
+
     static func isOnMenuBar(_ frame: CGRect, display: CGRect) -> Bool {
         let values = [frame.origin.x, frame.origin.y, frame.width, frame.height,
                       display.origin.x, display.origin.y, display.width, display.height]

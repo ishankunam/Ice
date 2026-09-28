@@ -11,6 +11,11 @@ enum MacOS27MenuBarGeometryTests {
         precondition(Geometry.concealingLength(control: ice, display: msi, applicationMenu: menus) == 1318)
         let portraitIce = CGRect(x: -200, y: -418, width: 24, height: 22)
         let portraitMenus = CGRect(x: -1080, y: -420, width: 300, height: 24)
+        precondition(Geometry.translatedApplicationMenu(menus, from: msi, to: dell) == portraitMenus)
+        precondition(Geometry.translatedApplicationMenu(portraitMenus, from: dell, to: msi) == menus)
+        precondition(Geometry.translatedApplicationMenu(menus, from: dell, to: msi) == nil)
+        let tooWide = CGRect(x: 0, y: 0, width: 1200, height: 24)
+        precondition(Geometry.translatedApplicationMenu(tooWide, from: msi, to: dell) == nil)
         precondition(Geometry.concealingLength(control: portraitIce, display: dell, applicationMenu: portraitMenus) == 548)
         precondition(!Geometry.isOnMenuBar(ice, display: dell))
         precondition(Geometry.concealingLength(control: portraitIce, display: dell, applicationMenu: menus) == nil)
@@ -27,6 +32,6 @@ enum MacOS27MenuBarGeometryTests {
                                                applicationMenu: shortMenus, notch: 720...792) == 588)
         precondition(Geometry.concealingLength(control: notchIce, display: notched,
                                                applicationMenu: menus, notch: 720...792) == nil)
-        print("11 menu bar geometry assertions passed")
+        print("15 menu bar geometry assertions passed")
     }
 }

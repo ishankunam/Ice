@@ -126,7 +126,7 @@ final class MacOS27NativeMenuBarHiding {
             guard let measured = MacOS27MenuBarGeometry.concealingLength(
                 control: controlFrame,
                 display: CGDisplayBounds(screen.displayID),
-                applicationMenu: screen.getApplicationMenuFrame(),
+                applicationMenu: applicationMenuFrame(on: screen),
                 notch: notch
             ) else {
                 withdraw(spacer.item)
@@ -149,6 +149,22 @@ final class MacOS27NativeMenuBarHiding {
         }
         if !spacer.item.isVisible { spacer.item.isVisible = true }
         return true
+    }
+
+    /// AppKit's application-menu AX tree can retain the main screen's origin.
+    /// Unnotched displays share that app menu layout, so translate its measured
+    /// frame rather than rejecting a valid portrait or negative-origin display.
+    private func applicationMenuFrame(on screen: NSScreen) -> CGRect? {
+        guard let frame = screen.getApplicationMenuFrame() else { return nil }
+        let target = CGDisplayBounds(screen.displayID)
+        if MacOS27MenuBarGeometry.isOnMenuBar(frame, display: target) { return frame }
+        guard !screen.hasNotch,
+              let source = NSScreen.screens.first(where: {
+                  MacOS27MenuBarGeometry.isOnMenuBar(frame, display: CGDisplayBounds($0.displayID))
+              }), !source.hasNotch else { return nil }
+        return MacOS27MenuBarGeometry.translatedApplicationMenu(
+            frame, from: CGDisplayBounds(source.displayID), to: target
+        )
     }
 
     /// The current length of a section's spacer, if it has one.
