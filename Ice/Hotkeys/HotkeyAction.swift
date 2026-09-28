@@ -30,8 +30,7 @@ enum HotkeyAction: String, Codable, CaseIterable {
             guard let section = appState.menuBarManager.section(withName: .hidden) else {
                 return
             }
-            appState.menuBarManager.prepareForControlToggle()
-            section.toggle()
+            section.toggle(origin: .button)
             // Prevent the section from automatically rehiding after mouse movement.
             if !section.isHidden {
                 appState.menuBarManager.showOnHoverAllowed = false
@@ -40,8 +39,7 @@ enum HotkeyAction: String, Codable, CaseIterable {
             guard let section = appState.menuBarManager.section(withName: .alwaysHidden) else {
                 return
             }
-            appState.menuBarManager.prepareForControlToggle()
-            section.toggle()
+            section.toggle(origin: .button)
             // Prevent the section from automatically rehiding after mouse movement.
             if !section.isHidden {
                 appState.menuBarManager.showOnHoverAllowed = false

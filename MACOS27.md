@@ -57,8 +57,13 @@ leaves items visible instead of publishing an oversized spacer.
 button. To hide, Ice widens it so `MenuBarAgent`'s own overflow takes everything
 to its left, sized from Ice's position relative to the notch. To show, Ice
 withdraws it, because even a one-point item reserves a visible slot. Changes are
-coalesced to one every 300 ms so rapid clicks don't stack overflow animations.
+coalesced to one every 400 ms so rapid clicks don't stack overflow animations.
 No private API is used.
+
+Each visibility request carries its origin and a generation. A newer request
+cancels pending alignment, deferred changes, and visibility checks. Only a
+button or scroll request may authorize boundary alignment, for at most three
+seconds. Automatic rehide starts a separate request without that authorization.
 
 **Alignment.** Before hiding, Ice checks through its own accessibility frames
 that the blank item sits directly left of its button. If it doesn't, Ice moves

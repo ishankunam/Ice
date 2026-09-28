@@ -69,11 +69,9 @@ final class MenuBarManager: ObservableObject {
     /// The minimum time between concealment changes, long enough for
     /// MenuBarAgent's overflow animation to finish.
     private static let nativeConcealmentChangeInterval = Duration.milliseconds(400)
-    private var nativeVisibilityGeneration: UInt64 = 0
+    private var nativeVisibilityRequest = MacOS27VisibilityRequest()
+    private var nativeVisibilityDisplayID: CGDirectDisplayID?
     private var nativeDragVisibility = MacOS27NativeDragVisibilityState()
-    /// The time of the user's most recent explicit section toggle. Ice only
-    /// sends a native drag to align its boundary shortly after one.
-    private var lastUserToggleTimestamp: ContinuousClock.Instant?
     /// Whether an automatic hide couldn't align Ice's boundary without a drag.
     private var needsUserActionToAlignBoundary = false
     /// The number of active temporary reveals of items concealed for the Ice Bar.
@@ -117,7 +115,8 @@ final class MenuBarManager: ObservableObject {
             logNativeVisibilityDecision("deferred until a native drag ends")
             return
         }
-        guard let screen = NSScreen.screenWithActiveMenuBar ?? controlItem(withName: .visible)?.screen ?? NSScreen.main else {
+        guard let screen = NSScreen.screens.first(where: { $0.displayID == nativeVisibilityDisplayID })
+            ?? NSScreen.screenWithActiveMenuBar ?? NSScreen.main else {
             logNativeVisibilityDecision("no screen for Ice's button")
             return
         }
@@ -178,8 +177,8 @@ final class MenuBarManager: ObservableObject {
                 logNativeVisibilityDecision("hide already in progress")
                 return
             }
-            let generation = nativeVisibilityGeneration
-            let isUserInitiated = lastUserToggleTimestamp.map { $0.duration(to: .now) < .seconds(3) } ?? false
+            let generation = nativeVisibilityRequest.generation
+            let isUserInitiated = nativeVisibilityRequest.permitsBoundaryDrag(at: ProcessInfo.processInfo.systemUptime)
             // After an automatic attempt couldn't align the boundary without a
             // drag, wait for the user instead of republishing the handle on
             // every cache refresh.
@@ -197,9 +196,9 @@ final class MenuBarManager: ObservableObject {
                 let aligned = await appState.itemManager.alignNativeHidingBoundary(
                     updatingCache: true,
                     displayID: screen.displayID,
-                    allowingDrag: isUserInitiated
+                    allowingDrag: isUserInitiated && nativeVisibilityRequest.permitsBoundaryDrag(at: ProcessInfo.processInfo.systemUptime)
                 )
-                guard !Task.isCancelled, generation == nativeVisibilityGeneration else {
+                guard !Task.isCancelled, nativeVisibilityRequest.isCurrent(generation) else {
                     logNativeVisibilityDecision("hide cancelled by a newer request")
                     return
                 }
@@ -221,7 +220,7 @@ final class MenuBarManager: ObservableObject {
                     // Concealed items aren't drawn, so the Ice Bar can only show
                     // images captured while they're still in the menu bar.
                     await appState.imageCache.captureMacOS27Images(for: .hidden, onlyIfMissing: true)
-                    guard !Task.isCancelled, generation == nativeVisibilityGeneration else { return }
+                    guard !Task.isCancelled, nativeVisibilityRequest.isCurrent(generation) else { return }
                 }
                 nativeHiding.setHidden(false, section: .alwaysHidden, anchorPosition: alwaysAnchor, screen: screen)
                 let concealed = nativeHiding.setHidden(
@@ -367,15 +366,17 @@ final class MenuBarManager: ObservableObject {
     @available(macOS 27.0, *)
     private func scheduleNativeConcealmentCheck(screen: NSScreen) {
         nativeConcealmentCheckTask?.cancel()
+        let generation = nativeVisibilityRequest.generation
         nativeConcealmentCheckTask = Task { [weak self] in
             // Accessibility can briefly report no settled frame while hosted
             // variants update, so only a repeated miss counts as a failure.
             for _ in 0 ..< 4 {
                 do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
-                guard let self, macOS27Controller.isConcealingItems else { return }
+                guard let self, nativeVisibilityRequest.isCurrent(generation), macOS27Controller.isConcealingItems else { return }
                 if isIceButtonOnBar(screen: screen) { return }
             }
-            guard let self, !Task.isCancelled, macOS27Controller.isConcealingItems else { return }
+            guard let self, !Task.isCancelled, nativeVisibilityRequest.isCurrent(generation),
+                  macOS27Controller.isConcealingItems else { return }
             logger.error("Ice's button left the menu bar after hiding; showing all items")
             let controlPosition = controlItem(withName: .visible)?.preferredPosition ?? 0
             cancelNativeConcealment()
@@ -420,8 +421,8 @@ final class MenuBarManager: ObservableObject {
     private func scheduleDeferredNativeVisibilitySync(after delay: Duration) {
         guard deferredNativeVisibilityTask == nil else { return }
         deferredNativeVisibilityTask = Task { [weak self] in
-            try? await Task.sleep(for: delay)
-            guard let self else { return }
+            do { try await Task.sleep(for: delay) } catch { return }
+            guard let self, !Task.isCancelled else { return }
             deferredNativeVisibilityTask = nil
             syncNativeVisibility()
         }
@@ -436,8 +437,9 @@ final class MenuBarManager: ObservableObject {
     }
 
     private func cancelNativeConcealment() {
-        guard nativeConcealmentTask != nil else { return }
-        nativeVisibilityGeneration &+= 1
+        nativeVisibilityRequest.invalidate()
+        nativeConcealmentCheckTask?.cancel()
+        nativeConcealmentCheckTask = nil
         nativeConcealmentTask?.cancel()
         nativeConcealmentTask = nil
     }
@@ -470,14 +472,22 @@ final class MenuBarManager: ObservableObject {
         syncNativeVisibility()
     }
 
-    /// A click after Layout toggles the actual, currently expanded bar.
-    func prepareForControlToggle() {
+    /// Starts one request before changing section state. Background refreshes
+    /// only synchronize that state; they never acquire input authorization.
+    func prepareForVisibilityChange(origin: MenuBarVisibilityOrigin, screen: NSScreen? = nil) {
         guard #available(macOS 27.0, *) else { return }
-        lastUserToggleTimestamp = .now
+        cancelNativeConcealment()
+        deferredNativeVisibilityTask?.cancel()
+        deferredNativeVisibilityTask = nil
+        if origin != .automatic, macOS27Controller.isLayoutEditing {
+            for section in sections { section.controlItem.state = .showSection }
+            macOS27Controller.endLayoutEditing()
+            cancelNativeConcealment()
+        }
+        let targetScreen = screen ?? (origin == .automatic ? NSScreen.screenWithActiveMenuBar : NSScreen.screenWithMouse)
+        nativeVisibilityDisplayID = targetScreen?.displayID
+        nativeVisibilityRequest.begin(origin: origin, at: ProcessInfo.processInfo.systemUptime)
         needsUserActionToAlignBoundary = false
-        guard macOS27Controller.isLayoutEditing else { return }
-        for section in sections { section.controlItem.state = .showSection }
-        macOS27Controller.endLayoutEditing()
     }
 
     /// Configures the internal observers for the manager.

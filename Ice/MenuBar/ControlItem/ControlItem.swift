@@ -545,8 +545,7 @@ final class ControlItem {
             let section = menuBarManager.section(withName: .alwaysHidden),
             section.canToggleVisibility
         {
-            menuBarManager.prepareForControlToggle()
-            section.toggle()
+            section.toggle(origin: .button)
             return
         }
 
@@ -554,8 +553,7 @@ final class ControlItem {
             let section = menuBarManager.section(withName: sectionName),
             section.canToggleVisibility
         {
-            menuBarManager.prepareForControlToggle()
-            section.toggle()
+            section.toggle(origin: .button)
         }
     }
 
@@ -658,8 +656,7 @@ final class ControlItem {
         guard let section = menuItem.representedObject as? MenuBarSection else {
             return
         }
-        appState?.menuBarManager.prepareForControlToggle()
-        section.toggle()
+        section.toggle(origin: .button)
     }
 
     /// Opens the menu bar search panel.

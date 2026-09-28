@@ -78,6 +78,9 @@ final class MenuBarSection {
 
     /// A Boolean value that indicates whether the section is hidden.
     var isHidden: Bool {
+        if #available(macOS 27.0, *), menuBarManager?.macOS27Controller.isLayoutEditing == true {
+            return false
+        }
         if useIceBar {
             if controlItem.state == .showSection {
                 return false
@@ -161,7 +164,7 @@ final class MenuBarSection {
     }
 
     /// Shows the section.
-    func show() {
+    func show(origin: MenuBarVisibilityOrigin = .automatic, screen: NSScreen? = nil) {
         guard let menuBarManager, isHidden else {
             return
         }
@@ -170,6 +173,8 @@ final class MenuBarSection {
             // The section is disabled.
             return
         }
+
+        menuBarManager.prepareForVisibilityChange(origin: origin, screen: screen)
 
         if useIceBar {
             // Make sure hidden and always-hidden control items are collapsed.
@@ -225,11 +230,12 @@ final class MenuBarSection {
     }
 
     /// Hides the section.
-    func hide() {
+    func hide(origin: MenuBarVisibilityOrigin = .automatic, screen: NSScreen? = nil) {
         guard let menuBarManager, canToggleVisibility, !isHidden else {
             return
         }
 
+        menuBarManager.prepareForVisibilityChange(origin: origin, screen: screen)
         menuBarManager.iceBarPanel.close() // Make sure Ice Bar is always closed.
         menuBarManager.showOnHoverAllowed = true
 
@@ -247,8 +253,8 @@ final class MenuBarSection {
     }
 
     /// Toggles the visibility of the section.
-    func toggle() {
-        if isHidden { show() } else { hide() }
+    func toggle(origin: MenuBarVisibilityOrigin = .automatic) {
+        if isHidden { show(origin: origin) } else { hide(origin: origin) }
     }
 
     /// Starts running checks to determine when to rehide the section.
