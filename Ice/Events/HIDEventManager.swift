@@ -23,6 +23,7 @@ final class HIDEventManager: ObservableObject {
 
     /// History of the manager's enabled states.
     private var enabledStateStack = [Bool]()
+    private let macOS27Monitor = MacOS27InteractionMonitor()
 
     /// A Boolean value that indicates whether the manager is enabled.
     private var isEnabled = false {
@@ -121,9 +122,10 @@ final class HIDEventManager: ObservableObject {
     /// Sets up the manager.
     func performSetup(with appState: AppState) {
         self.appState = appState
-        // macOS 27 interaction belongs exclusively to Ice's own status item.
-        // Do not even construct global mouse/scroll monitors or event taps.
-        guard #unavailable(macOS 27.0) else { return }
+        if #available(macOS 27.0, *) {
+            macOS27Monitor.performSetup(with: appState)
+            return
+        }
         startAll()
         configureCancellables()
     }
@@ -160,13 +162,19 @@ final class HIDEventManager: ObservableObject {
 
     /// Starts all monitors.
     func startAll() {
-        guard #unavailable(macOS 27.0) else { return }
+        if #available(macOS 27.0, *) {
+            macOS27Monitor.start()
+            return
+        }
         isEnabled = enabledStateStack.popLast() ?? true
     }
 
     /// Stops all monitors.
     func stopAll() {
-        guard #unavailable(macOS 27.0) else { return }
+        if #available(macOS 27.0, *) {
+            macOS27Monitor.stop()
+            return
+        }
         enabledStateStack.append(isEnabled)
         isEnabled = false
     }

@@ -17,6 +17,7 @@ run_test() {
 run_test NativeMenuBarBoundaryTests Ice/MenuBar/MenuBarItems/MacOS27NativeBoundary.swift
 run_test MacOS27MenuBarGeometryTests Ice/MenuBar/MacOS27MenuBarGeometry.swift
 run_test MacOS27VisibilityRequestTests Ice/MenuBar/MacOS27VisibilityRequest.swift
+run_test MacOS27ScrollTests Ice/Events/MacOS27InteractionRules.swift Ice/MenuBar/MacOS27MenuBarGeometry.swift
 run_test NativeDragVisibilityStateTests Ice/MenuBar/MenuBarItems/MacOS27NativeBoundary.swift
 run_test MacOS27DynamicItemStateTests Ice/MenuBar/MenuBarItems/MacOS27DynamicItemState.swift
 run_test MacOS27LayoutOwnerTests Ice/MenuBar/MenuBarItems/MacOS27DynamicItemState.swift

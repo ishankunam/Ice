@@ -14,6 +14,8 @@ with additional hardening. Every macOS 27 path is gated on
 ## What works on macOS 27
 
 - Hiding and showing the Hidden section with Ice's button or a hotkey.
+- Scrolling in a visible menu bar reveals or hides its Hidden section using
+  the existing scroll direction and threshold. Events still reach macOS.
 - The Ice Bar: clicking Ice's button shows the hidden items in a bar below it.
   On macOS 26 and later it is drawn with Liquid Glass, with Darkness and
   Transparency settings.
@@ -23,7 +25,7 @@ with additional hardening. Every macOS 27 path is gated on
 
 ## What doesn't
 
-- The search panel, show on hover/click/scroll, auto-rehide, item spacing and
+- The search panel, show on hover/click, auto-rehide, item spacing and
   app-menu hiding are disabled on macOS 27.
 - Without the Ice Bar, hidden items move into Apple's native overflow (the «
   button), so they are still reachable from there.

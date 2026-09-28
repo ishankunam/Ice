@@ -44,10 +44,10 @@ struct GeneralSettingsPane: View {
             IceSection {
                 iceBarOptions
             }
+            IceSection {
+                showOptions
+            }
             if #unavailable(macOS 27.0) {
-                IceSection {
-                    showOptions
-                }
                 IceSection {
                     rehideOptions
                 }
@@ -296,9 +296,9 @@ struct GeneralSettingsPane: View {
         if #unavailable(macOS 27.0) {
             Toggle("Show on click", isOn: $settings.showOnClick)
                 .annotation("Click inside an empty area of the menu bar to show hidden menu bar items.")
+            Toggle("Show on hover", isOn: $settings.showOnHover)
+                .annotation("Hover over an empty area of the menu bar to show hidden menu bar items.")
         }
-        Toggle("Show on hover", isOn: $settings.showOnHover)
-            .annotation("Hover over an empty area of the menu bar to show hidden menu bar items.")
         Toggle("Show on scroll", isOn: $settings.showOnScroll)
             .annotation("Scroll or swipe in the menu bar to show hidden menu bar items.")
     }
