@@ -3,6 +3,12 @@
     <h1>Ice</h1>
 </div>
 
+> [!NOTE]
+> This fork's `fix/macos27-menu-bar-hiding` branch contains a custom macOS 27
+> build. Use its [installation and rollback instructions](INSTALL-MACOS27.md)
+> and [validation record](VALIDATION-MACOS27.md). The upstream download links
+> below do not include this branch's fixes.
+
 Ice is a powerful menu bar management tool. While its primary function is hiding and showing menu bar items, it aims to cover a wide variety of additional features to make it one of the most versatile menu bar tools available.
 
 ![Banner](https://github.com/user-attachments/assets/4423085c-4e4b-4f3d-ad0f-90a217c03470)

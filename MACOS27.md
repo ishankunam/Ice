@@ -1,5 +1,9 @@
 # macOS 27 support
 
+For this fork's artifact installation and rollback procedure, see
+[INSTALL-MACOS27.md](INSTALL-MACOS27.md). Actual build and interaction results
+are tracked separately in [VALIDATION-MACOS27.md](VALIDATION-MACOS27.md).
+
 macOS 27 moved every status item into `MenuBarAgent`, which draws them into a
 single bar. There are no per-item windows any more, and an oversized status
 item (Ice's old 10,000-point divider) is discarded instead of pushing other
@@ -57,6 +61,9 @@ Ice's own controls are read for the active display before resolving hosted
 variants. Spacer sizing uses Quartz points on that display, including portrait
 displays and negative origins. Missing, off-display or insufficient geometry
 leaves items visible instead of publishing an oversized spacer.
+When Accessibility reports the main display's application-menu origin for a
+secondary display, Ice translates the measured frame between display origins.
+It only does this between unnotched displays, and rejects menus that do not fit.
 
 **Hiding.** Ice owns a blank status item immediately to the left of its visible
 button. To hide, Ice widens it so `MenuBarAgent`'s own overflow takes everything
