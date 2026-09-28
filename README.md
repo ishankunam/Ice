@@ -9,6 +9,8 @@
 > and [validation record](VALIDATION-MACOS27.md). The upstream download links
 > below do not include this branch's fixes.
 
+See [ROADMAP.md](ROADMAP.md) for the remaining validation and public release work.
+
 Ice is a powerful menu bar management tool. While its primary function is hiding and showing menu bar items, it aims to cover a wide variety of additional features to make it one of the most versatile menu bar tools available.
 
 ![Banner](https://github.com/user-attachments/assets/4423085c-4e4b-4f3d-ad0f-90a217c03470)
