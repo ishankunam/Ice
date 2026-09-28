@@ -1,0 +1,25 @@
+name: macOS 27 build and validation
+
+on:
+  push:
+    branches:
+      - fix/macos27-menu-bar-hiding
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and validate Apple Silicon app
+        run: bash Scripts/build-macos27.sh
+      - name: Upload app and validation records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ice-macos27-arm64-${{ github.sha }}
+          path: build/artifacts/
+          if-no-files-found: error
