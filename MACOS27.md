@@ -161,3 +161,6 @@ The macOS 27 compatibility work is by PWB97 in
 [jordanbaird/Ice#980](https://github.com/jordanbaird/Ice/pull/980).
 Accessibility enumeration was adapted from the GPLv3
 [Thaw project](https://github.com/thaw-app/Thaw).
+## Custom build updates
+
+This fork disables Sparkle initialization, automatic downloads, and manual update checks in its custom build. Install new artifacts from `fix/macos27-menu-bar-hiding` manually. Existing Sparkle preferences are preserved for rollback to the original application.

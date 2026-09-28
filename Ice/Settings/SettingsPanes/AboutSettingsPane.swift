@@ -105,10 +105,14 @@ struct AboutSettingsPane: View {
     @ViewBuilder
     private var updatesSection: some View {
         IceSection(options: .hasDividers) {
-            automaticallyCheckForUpdates
-            automaticallyDownloadUpdates
-            if updatesManager.canCheckForUpdates {
-                checkForUpdates
+            if updatesManager.allowsUpstreamUpdates {
+                automaticallyCheckForUpdates
+                automaticallyDownloadUpdates
+                if updatesManager.canCheckForUpdates {
+                    checkForUpdates
+                }
+            } else {
+                Text("Custom macOS 27 build. Install updates manually from your fork’s build artifacts.")
             }
         }
         .frame(maxWidth: 600)

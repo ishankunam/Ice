@@ -9,6 +9,9 @@ import SwiftUI
 /// Manager for app updates.
 @MainActor
 final class UpdatesManager: NSObject, ObservableObject {
+    /// Custom builds are updated manually without changing saved Sparkle preferences.
+    let allowsUpstreamUpdates = BuildUpdatePolicy.allowsUpstreamUpdates(info: Bundle.main.infoDictionary ?? [:])
+
     /// A Boolean value that indicates whether the user can check for updates.
     @Published var canCheckForUpdates = false
 
@@ -19,23 +22,24 @@ final class UpdatesManager: NSObject, ObservableObject {
     private(set) weak var appState: AppState?
 
     /// The underlying updater controller.
-    private(set) lazy var updaterController = SPUStandardUpdaterController(
-        startingUpdater: true,
+    private lazy var updaterController = SPUStandardUpdaterController(
+        startingUpdater: allowsUpstreamUpdates,
         updaterDelegate: self,
         userDriverDelegate: self
     )
 
     /// The underlying updater.
-    var updater: SPUUpdater {
+    private var updater: SPUUpdater {
         updaterController.updater
     }
 
     /// A Boolean value that indicates whether to automatically check for updates.
     var automaticallyChecksForUpdates: Bool {
         get {
-            updater.automaticallyChecksForUpdates
+            allowsUpstreamUpdates && updater.automaticallyChecksForUpdates
         }
         set {
+            guard allowsUpstreamUpdates else { return }
             objectWillChange.send()
             updater.automaticallyChecksForUpdates = newValue
         }
@@ -44,9 +48,10 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// A Boolean value that indicates whether to automatically download updates.
     var automaticallyDownloadsUpdates: Bool {
         get {
-            updater.automaticallyDownloadsUpdates
+            allowsUpstreamUpdates && updater.automaticallyDownloadsUpdates
         }
         set {
+            guard allowsUpstreamUpdates else { return }
             objectWillChange.send()
             updater.automaticallyDownloadsUpdates = newValue
         }
@@ -55,6 +60,7 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// Performs the initial setup of the manager.
     func performSetup(with appState: AppState) {
         self.appState = appState
+        guard allowsUpstreamUpdates else { return }
         _ = updaterController
         configureCancellables()
     }
@@ -69,6 +75,7 @@ final class UpdatesManager: NSObject, ObservableObject {
 
     /// Checks for app updates.
     @objc func checkForUpdates() {
+        guard allowsUpstreamUpdates else { return }
         #if DEBUG
         // Checking for updates hangs in debug mode.
         let alert = NSAlert()

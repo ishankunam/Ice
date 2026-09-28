@@ -627,7 +627,9 @@ final class ControlItem {
             keyEquivalent: ""
         )
         checkForUpdatesItem.target = self
-        menu.addItem(checkForUpdatesItem)
+        if appState.updatesManager.allowsUpstreamUpdates {
+            menu.addItem(checkForUpdatesItem)
+        }
 
         menu.addItem(.separator())
 

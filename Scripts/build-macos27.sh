@@ -23,6 +23,8 @@ xcodebuild -project Ice.xcodeproj -scheme Ice -configuration Release \
 ice_app=build/DerivedData/Build/Products/Release/Ice.app
 codesign --verify --deep --strict --verbose=2 "$ice_app" 2>&1 | tee build/artifacts/signature.log
 test "$(lipo -archs "$ice_app/Contents/MacOS/Ice")" = arm64
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$ice_app/Contents/Info.plist")" = com.jordanbaird.Ice
+test "$(/usr/libexec/PlistBuddy -c 'Print :IceDisableUpstreamUpdates' "$ice_app/Contents/Info.plist")" = true
 git diff --exit-code -- Ice.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 ditto -c -k --sequesterRsrc --keepParent "$ice_app" build/artifacts/Ice-macos27-arm64.zip
 (cd build/artifacts && shasum -a 256 Ice-macos27-arm64.zip > SHA256SUMS)
