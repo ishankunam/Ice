@@ -117,7 +117,7 @@ final class MenuBarManager: ObservableObject {
             logNativeVisibilityDecision("deferred until a native drag ends")
             return
         }
-        guard let screen = controlItem(withName: .visible)?.screen ?? NSScreen.main else {
+        guard let screen = NSScreen.screenWithActiveMenuBar ?? controlItem(withName: .visible)?.screen ?? NSScreen.main else {
             logNativeVisibilityDecision("no screen for Ice's button")
             return
         }
@@ -224,13 +224,18 @@ final class MenuBarManager: ObservableObject {
                     guard !Task.isCancelled, generation == nativeVisibilityGeneration else { return }
                 }
                 nativeHiding.setHidden(false, section: .alwaysHidden, anchorPosition: alwaysAnchor, screen: screen)
-                nativeHiding.setHidden(
+                let concealed = nativeHiding.setHidden(
                     true,
                     section: .hidden,
                     anchorPosition: controlPosition,
                     screen: screen,
-                    controlFrame: currentIceButtonFrame()
+                    controlFrame: currentIceButtonFrame(on: screen)
                 )
+                guard concealed else {
+                    macOS27Controller.isConcealingItems = false
+                    for section in sections { section.controlItem.state = .showSection }
+                    return
+                }
                 lastNativeConcealmentChange = .now
                 macOS27Controller.isConcealingItems = true
                 logNativeVisibilityDecision("hidden: \(nativeHiding.debugDescription(for: .hidden))")
@@ -350,7 +355,7 @@ final class MenuBarManager: ObservableObject {
             section: .hidden,
             anchorPosition: controlPosition,
             screen: screen,
-            controlFrame: currentIceButtonFrame()
+            controlFrame: currentIceButtonFrame(on: screen)
         )
         lastNativeConcealmentChange = .now
     }
@@ -387,7 +392,7 @@ final class MenuBarManager: ObservableObject {
     private func isIceButtonOnBar(screen: NSScreen) -> Bool {
         let display = CGDisplayBounds(screen.displayID)
         let strip = CGRect(x: display.minX, y: display.minY, width: display.width, height: 40)
-        let items = MacOS27MenuBarItemProvider.ownMenuBarItems()
+        let items = MacOS27MenuBarItemProvider.ownMenuBarItems(on: screen.displayID)
         guard let ice = items.first(matching: .visibleControlItem), strip.contains(ice.bounds) else {
             return false
         }
@@ -406,8 +411,8 @@ final class MenuBarManager: ObservableObject {
     /// Returns the current frame of Ice's visible control item, read through
     /// Accessibility from Ice's own process.
     @available(macOS 27.0, *)
-    private func currentIceButtonFrame() -> CGRect? {
-        MacOS27MenuBarItemProvider.ownMenuBarItems().first(matching: .visibleControlItem)?.bounds
+    private func currentIceButtonFrame(on screen: NSScreen) -> CGRect? {
+        MacOS27MenuBarItemProvider.ownMenuBarItems(on: screen.displayID).first(matching: .visibleControlItem)?.bounds
     }
 
     /// Applies the latest requested visibility once the given delay has passed.

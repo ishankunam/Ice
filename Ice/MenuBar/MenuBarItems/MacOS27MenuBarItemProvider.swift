@@ -40,14 +40,15 @@ enum MacOS27MenuBarItemProvider {
     /// A single main-thread batch for our own controls only. Do not take the
     /// background scan lock here: its owner may be waiting for the main thread.
     @MainActor
-    static func ownMenuBarItems() -> [MenuBarItem] {
+    static func ownMenuBarItems(on displayID: CGDirectDisplayID? = nil) -> [MenuBarItem] {
+        let displayID = displayID ?? NSScreen.screenWithActiveMenuBar?.displayID ?? NSScreen.main?.displayID
         let frames = NSScreen.screens.map { screen in
             let display = CGDisplayBounds(screen.displayID)
             return CGRect(x: display.minX, y: display.minY, width: display.width, height: maxItemHeight)
         }
         let items = rawItems(
             from: .current,
-            displayBounds: nil,
+            displayBounds: displayID.map(CGDisplayBounds),
             menuBarFrames: frames,
             includeSupplementaryMetadata: false
         ).items

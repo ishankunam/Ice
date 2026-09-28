@@ -48,6 +48,11 @@ accessibility tree: one window per display, one container per item, each
 nesting the owning app's element. An item whose container overlaps the overflow
 button or another container is treated as not drawn.
 
+Ice's own controls are read for the active display before resolving hosted
+variants. Spacer sizing uses Quartz points on that display, including portrait
+displays and negative origins. Missing, off-display or insufficient geometry
+leaves items visible instead of publishing an oversized spacer.
+
 **Hiding.** Ice owns a blank status item immediately to the left of its visible
 button. To hide, Ice widens it so `MenuBarAgent`'s own overflow takes everything
 to its left, sized from Ice's position relative to the notch. To show, Ice

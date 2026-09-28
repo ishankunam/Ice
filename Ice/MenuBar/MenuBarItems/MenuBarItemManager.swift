@@ -498,7 +498,7 @@ extension MenuBarItemManager {
 
     @available(macOS 27.0, *)
     private func nativeHidingBoundaryIsReady(on displayID: CGDirectDisplayID) -> Bool {
-        let items = MacOS27MenuBarItemProvider.ownMenuBarItems()
+        let items = MacOS27MenuBarItemProvider.ownMenuBarItems(on: displayID)
         let boundaryTag = MenuBarItemTag.nativeBoundary(for: .hidden)
         guard
             NSScreen.screens.contains(where: { $0.displayID == displayID }),
@@ -514,7 +514,7 @@ extension MenuBarItemManager {
         // system-wide hit map can still describe the previous native layout
         // after our owner geometry has settled, so it must not gate a resize.
         // Actual drag operations continue to verify their input targets.
-        let checked = MacOS27MenuBarItemProvider.ownMenuBarItems()
+        let checked = MacOS27MenuBarItemProvider.ownMenuBarItems(on: displayID)
         return checked.first(matching: boundaryTag)?.bounds == boundary.bounds &&
             checked.first(matching: .visibleControlItem)?.bounds == ice.bounds
     }
