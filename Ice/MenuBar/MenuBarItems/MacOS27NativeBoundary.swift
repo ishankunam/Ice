@@ -11,6 +11,8 @@ struct MacOS27NativeDragVisibilityState {
     private var dragDepth = 0
     private var hasPendingUpdate = false
 
+    var isDragging: Bool { dragDepth > 0 }
+
     mutating func beginDrag() {
         dragDepth += 1
     }

@@ -279,6 +279,11 @@ enum RehideStrategy: Int, CaseIterable, Identifiable {
     /// Menu bar items are rehidden when the focused app changes.
     case focusedApp = 2
 
+    var isAvailable: Bool {
+        if #available(macOS 27.0, *) { return self == .smart }
+        return true
+    }
+
     var id: Int { rawValue }
 
     /// Localized string key representation.

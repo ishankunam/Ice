@@ -6,6 +6,28 @@
 import CoreGraphics
 
 enum MacOS27InteractionRules {
+    struct SmartRehideContext {
+        var enabled = true
+        var hasVisibleSection = true
+        var insideMenuBar = false
+        var settingsPresented = false
+        var layoutEditing = false
+        var dragging = false
+        var menuTracking = false
+        var isIce = false
+        var isDock = false
+        var isRegularApplication = true
+        var isActiveApplication = true
+        var requestIsCurrent = true
+    }
+
+    static func shouldSmartRehide(_ context: SmartRehideContext) -> Bool {
+        context.enabled && context.hasVisibleSection && context.requestIsCurrent &&
+            !context.insideMenuBar && !context.settingsPresented && !context.layoutEditing &&
+            !context.dragging && !context.menuTracking && !context.isIce &&
+            (context.isDock || (context.isRegularApplication && context.isActiveApplication))
+    }
+
     enum ScrollAction {
         case show, hide
     }

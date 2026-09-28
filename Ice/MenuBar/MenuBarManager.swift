@@ -72,6 +72,8 @@ final class MenuBarManager: ObservableObject {
     private var nativeVisibilityRequest = MacOS27VisibilityRequest()
     private var nativeVisibilityDisplayID: CGDirectDisplayID?
     private var nativeDragVisibility = MacOS27NativeDragVisibilityState()
+    var nativeVisibilityRevision: UInt64 { nativeVisibilityRequest.generation }
+    var isNativeDragInProgress: Bool { nativeDragVisibility.isDragging }
     /// Whether an automatic hide couldn't align Ice's boundary without a drag.
     private var needsUserActionToAlignBoundary = false
     /// The number of active temporary reveals of items concealed for the Ice Bar.

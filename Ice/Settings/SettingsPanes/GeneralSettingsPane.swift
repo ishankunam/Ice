@@ -47,10 +47,10 @@ struct GeneralSettingsPane: View {
             IceSection {
                 showOptions
             }
+            IceSection {
+                rehideOptions
+            }
             if #unavailable(macOS 27.0) {
-                IceSection {
-                    rehideOptions
-                }
                 IceSection {
                     spacingOptions
                 }
@@ -323,7 +323,7 @@ struct GeneralSettingsPane: View {
         VStack {
             IcePicker("Strategy", selection: $settings.rehideStrategy) {
                 ForEach(RehideStrategy.allCases) { strategy in
-                    Text(strategy.localized).tag(strategy)
+                    Text(strategy.localized).tag(strategy).disabled(!strategy.isAvailable)
                 }
             }
             .annotation {
@@ -337,7 +337,7 @@ struct GeneralSettingsPane: View {
                 }
             }
 
-            if case .timed = settings.rehideStrategy {
+            if case .timed = settings.rehideStrategy, settings.rehideStrategy.isAvailable {
                 IceSlider(
                     rehideIntervalKey,
                     value: $settings.rehideInterval,
